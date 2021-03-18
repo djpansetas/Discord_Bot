@@ -1,0 +1,74 @@
+const Discord = require("discord.js")
+const Database = require("@replit/database")
+
+
+const db = new Database()
+
+const client = new Discord.Client()
+
+
+const testWords = ["test", "test1", "test2", "test3"]
+
+const starterReplys = [
+  "reply1",
+  "reply2"
+  ,"reply3"
+
+
+]
+db.get("replys").then(replys => {
+  if (!replys || replys.length < 1) {
+    db.set("replys", starterReplys)
+  }
+})
+
+function updateReplys(replyMessage) {
+  db.get(replys).then(replys => {
+    replys.push([replyMessage])
+    db.set("replys", replys)
+  })
+}
+
+function deleteReply(index) {
+  db.get("replys").then(replys => {
+    if (replys.length > index) {
+      replys.splice(index, 1)
+      db.set("replys", replys)
+    }
+  })
+}
+  
+
+
+client.on("ready", () => {
+  console.log(`Logged in as ${client.user.tag}`)
+})
+
+client.on("message", msg => {
+  if (msg.content === "help") {
+    msg.reply("<#801728252346630166>")
+  }
+
+  if (testWords.some(word => msg.content.includes(word))) {
+    db.get("replys").then(replys => {
+      const reply = replys[Math.floor(Math.random() * replys.length)]
+      msg.reply(reply)
+    })
+
+  }
+
+  if (msg.content.startsWith(".new")) {
+    replyMessage = msg.content.split(".new ") [1]
+    updateReplys(replyMessage)
+    msg.channel.send("New reply message added.")
+  }
+
+  if (msg.content.startsWith(".del")) {
+    index = parseIt(msg.content.split(".del ") [1])
+    deleteReplys(index)
+    msg.channel.send("New reply message deleted.")
+  }
+  
+})
+
+client.login(process.env.TOKEN)
